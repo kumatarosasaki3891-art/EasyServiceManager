@@ -1,0 +1,4 @@
+* text=auto eol=crlf
+
+# Bash scripts must remain LF for macOS execution.
+*.sh text eol=lf

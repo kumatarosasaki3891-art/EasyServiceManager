@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.kumatarosasaki3891_art.EasyServiceManager</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+
+  <name>EasyServiceManager</name>
+  <name xml:lang="ja">簡単サービス診断 (EasyServiceManager)</name>
+
+  <summary>Discover OS services, visualize open ports, and perform lightweight security diagnostics</summary>
+  <summary xml:lang="ja">稼働中のサービスや待受ポートを一覧で可視化し、基本的なセキュリティ設定を診断</summary>
+
+  <description>
+    <p>
+      EasyServiceManager is a lightweight service discovery and configuration visualization tool designed to help you quickly understand what services and ports are running on your PC or server.
+    </p>
+    <p>
+      It categorizes active system services, inspects listening ports, checks firewall and SSH configurations, and provides a clear diagnostic overview without performing intrusive vulnerability scans or modifying system services.
+    </p>
+    <p>Key Features:</p>
+    <ul>
+      <li>Service Discovery: Detects running systemd services on Linux, categorizing them into Web Server, Container, Database, SSH, Monitoring, etc.</li>
+      <li>Port &amp; Process Mapping: Correlates active listening TCP ports with corresponding service names and processes.</li>
+      <li>Basic Security Checks: Lightweight diagnostics for Firewall status, SSH configuration, open HTTPS ports, and Docker/Podman container settings.</li>
+      <li>QR Code Report Transfer: Built-in local HTTP server allows exporting diagnostic reports directly to a smartphone via QR code.</li>
+      <li>Multi-language Support: Available in 12 languages (Japanese, English, Simplified Chinese, Traditional Chinese, Korean, Vietnamese, German, French, Spanish, Italian, Portuguese, Russian).</li>
+      <li>Report Export: Export findings into clean Markdown, HTML, or JSON formats.</li>
+    </ul>
+    <p xml:lang="ja">
+      簡単サービス診断 (EasyServiceManager) は、「このPCやサーバーで何が動いているか」をひと目で把握するためのサービス発見・構成可視化デスクトップツールです。
+    </p>
+    <p xml:lang="ja">
+      稼働中のサービスをカテゴリ別に整理し、TCP待受ポートやFirewall、SSH、コンテナ（Docker/Podman）の基本設定を素早く診断します。システムの停止や危険な脆弱性スキャンを行うことなく、安全に構成を確認できます。
+    </p>
+    <p xml:lang="ja">主な機能:</p>
+    <ul xml:lang="ja">
+      <li>サービス自動検出: Linux上のsystemdサービスを検出し、Webサーバー、データベース、コンテナ、SSH、監視などに自動分類。</li>
+      <li>待受ポート可視化: 開放されているTCPポートと稼働中サービス・プロセスを紐づけて一覧表示。</li>
+      <li>簡易セキュリティ診断: Firewallの状態、待受ポート、SSH設定、HTTPSポート、Docker/Podman設定の安全性をチェック。</li>
+      <li>QRコードレポート転送: 内蔵の軽量HTTPサーバーにより、診断レポートをスマホのカメラでQRコードを読み取るだけで転送可能。</li>
+      <li>12言語対応: 日本語、英語、中国語（簡体字・繁体字）、韓国語、ベトナム語、ドイツ語、フランス語、スペイン語、イタリア語、ポルトガル語、ロシア語に対応。</li>
+      <li>レポート出力: 診断結果をMarkdown、HTML、JSONなどの形式で保存可能。</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">io.github.kumatarosasaki3891_art.EasyServiceManager.desktop</launchable>
+
+  <url type="homepage">https://github.com/kumatarosasaki3891-art/EasyServiceManager</url>
+  <url type="bugtracker">https://github.com/kumatarosasaki3891-art/EasyServiceManager/issues</url>
+  <url type="vcs-browser">https://github.com/kumatarosasaki3891-art/EasyServiceManager</url>
+
+  <developer id="io.github.kumatarosasaki3891_art">
+    <name>Sasaki Kumataro</name>
+  </developer>
+
+  <screenshots>
+    <screenshot type="default">
+      <image type="source">https://raw.githubusercontent.com/kumatarosasaki3891-art/EasyServiceManager/main/docs/screenshots/main_window.png</image>
+      <caption>Main application window showing categorized services and security diagnostics</caption>
+      <caption xml:lang="ja">カテゴリ別サービス一覧とセキュリティ診断結果を表示したメイン画面</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://raw.githubusercontent.com/kumatarosasaki3891-art/EasyServiceManager/main/docs/screenshots/easy_service_check_qr_transfer.png</image>
+      <caption>QR code file transfer for sharing diagnostic reports with mobile devices</caption>
+      <caption xml:lang="ja">スマホへ診断レポートを共有するためのQRコード転送画面</caption>
+    </screenshot>
+  </screenshots>
+
+  <provides>
+    <binary>EasyServiceManager</binary>
+  </provides>
+
+  <content_rating type="oars-1.1" />
+
+  <releases>
+    <release version="1.0.0" date="2026-11-14">
+      <description>
+        <p>Initial Flathub release for Linux desktop.</p>
+        <p xml:lang="ja">Linuxデスクトップに対応したFlathub初版リリース。</p>
+      </description>
+    </release>
+  </releases>
+</component>

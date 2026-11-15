@@ -1,0 +1,16 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=EasyServiceManager
+Name[ja]=簡単サービス診断 (EasyServiceManager)
+GenericName=Service & Port Diagnostic Tool
+GenericName[ja]=サービス・ポート診断ツール
+Comment=Discover services, monitor listening ports, and check local security configurations
+Comment[ja]=稼働中のサービスと待受ポートを可視化し、セキュリティ設定を簡易診断
+Exec=EasyServiceManager
+Icon=io.github.kumatarosasaki3891_art.EasyServiceManager
+Terminal=false
+Categories=System;Monitor;Security;Utility;
+Keywords=service;diagnostic;port;systemd;security;docker;podman;network;monitor;
+Keywords[ja]=サービス;診断;ポート;systemd;セキュリティ;コンテナ;監視;ネットワーク;
+StartupWMClass=EasyServiceManager

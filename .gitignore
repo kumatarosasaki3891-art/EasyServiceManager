@@ -1,0 +1,38 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio and VS Code local state
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vscode/.ropeproject/
+
+# MAUI and platform build artifacts
+**/AppPackages/
+**/*.app/
+**/*.ipa
+**/*.apk
+**/*.aab
+**/*.dSYM/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Android and Xcode local state
+.externalNativeBuild/
+.cxx/
+DerivedData/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# Local AI model artifacts
+# Keep the model locally for development, but do not commit the large GGUF file.
+**/AiModel/*.gguf

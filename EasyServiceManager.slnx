@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="EasyServiceManager.Cli/EasyServiceManager.Cli.fsproj" />
+  <Project Path="EasyServiceManager.Core/EasyServiceManager.Core.fsproj" />
+  <Project Path="EasyServiceManager/EasyServiceManager.fsproj" />
+</Solution>
