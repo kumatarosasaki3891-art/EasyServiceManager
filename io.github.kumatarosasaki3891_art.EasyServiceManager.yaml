@@ -55,6 +55,6 @@ modules:
       - type: git
         url: https://github.com/kumatarosasaki3891-art/EasyServiceManager.git
         tag: v1.0.0
-        commit: TARGET_COMMIT_HASH
+        commit: ac2d719a06de66f97b6934394bf6b4c52a1f1105
       # オフラインビルド用 NuGet パッケージ定義
       - nuget-sources.json
