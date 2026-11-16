@@ -128,13 +128,19 @@ module ServiceDiscovery =
         categoryForDetailed name "" ""
 
     /// <summary>外部コマンドを実行して標準出力文字列を取得します。</summary>
-    let private runCommand executable (arguments: string list) =
-        let info = ProcessStartInfo(executable)
-        info.UseShellExecute <- false
-        info.RedirectStandardOutput <- true
-        info.RedirectStandardError <- true
-        info.CreateNoWindow <- true
-        for argument in arguments do info.ArgumentList.Add(argument)
+	let private runCommand executable (arguments: string list) =
+	    // Flatpak 内では systemctl 等が存在しないため、ホスト側で実行する
+	    let inFlatpak = File.Exists("/.flatpak-info")
+	    let effectiveExecutable = if inFlatpak then "flatpak-spawn" else executable
+	    let effectiveArguments =
+	        if inFlatpak then "--host" :: executable :: arguments else arguments
+	    let info = ProcessStartInfo(effectiveExecutable)
+	    info.UseShellExecute <- false
+	    info.RedirectStandardOutput <- true
+	    info.RedirectStandardError <- true
+	    info.CreateNoWindow <- true
+	    if inFlatpak then info.WorkingDirectory <- "/"
+	    for argument in effectiveArguments do info.ArgumentList.Add(argument)
         use childProcess = new Process(StartInfo = info)
         if not (childProcess.Start()) then
             failwithf "コマンドを開始できませんでした: %s" executable
