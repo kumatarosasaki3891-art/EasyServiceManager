@@ -22,10 +22,13 @@
 
 ## 📸 画面イメージ / Screenshots
 
-<!-- ↓ GitHubのIssue編集欄にスクリーンショット画像をドラッグ＆ドロップして生成された <img ... /> タグを貼ってください -->
-| メイン画面（カテゴリ・サービス一覧・診断スコア） | レポート出力 ＆ ローカルWi-Fi QRコード転送 |
+| メイン画面（カテゴリ・サービス一覧・診断スコア） | レポート出力 ＆ ローカルWi-Fi QRコード転送 | 転送後はQRコード無効 |
+| :---: | :---: | :---: |
+| <img width="440" alt="easy_service_check_top" src="https://github.com/user-attachments/assets/2c1d0121-ff74-40ac-9235-f5c692fd3491" /> | <img width="440" alt="easy_service_check_qr_transfer" src="https://github.com/user-attachments/assets/e7a3575a-7f31-467b-9586-23245f6e0b3d" /> | <img width="440" alt="easy_service_check_qr_transfer2" src="https://github.com/user-attachments/assets/cf435059-f94e-418f-8172-b718cdc5f1f4" /> |
+
+| スマートフォン受信画面 | HTMLレポート表示結果 |
 | :---: | :---: |
-| ここにメイン画面の `<img ... />` タグを貼る | ここにQR転送画面の `<img ... />` タグを貼る |
+| <img width="230" alt="easy_service_receive" src="https://github.com/user-attachments/assets/8eeda4b5-22ea-4845-be58-35b264025c46" /> | <img width="230" alt="easy_service_receive_2" src="https://github.com/user-attachments/assets/4f8e1d45-490d-44fc-9412-b332ccbc9012" /> |
 
 ---
 
