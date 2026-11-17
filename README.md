@@ -4,6 +4,8 @@
 [![Linux / CLI](https://img.shields.io/badge/Linux-GUI%20%26%20CLI%20(esd)-0284c7)](#ダウンロード--download)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+[English](README_EN.md) | 日本語
+
 「このPCやサーバーで何が動いているか」を1画面で把握するための、ローカル完結型のサービス発見・簡易セキュリティ診断アプリです。  
 主要サービスをカテゴリ別に可視化し、Firewallや待受ポート・バインドアドレスの基本的なローカルセキュリティ設定を安全に点検します。
 
@@ -56,78 +58,78 @@
 - Windows 10 / 11
 - systemd を利用する Linux
 
-ディストリビューション固有の設定を必要としない範囲で動作します。Linuxでは `systemctl` と `ss` を利用するため、これらのコマンドが必要です[cite: 19]。
+ディストリビューション固有の設定を必要としない範囲で動作します。Linuxでは `systemctl` と `ss` を利用するため、これらのコマンドが必要です。
 
 ### 取得方法
 
 | OS | サービス | 待受ポート |
 | --- | --- | --- |
-| Windows | Windows Service API（PowerShell経由）[cite: 19] | TCP待受とプロセス情報（PowerShell経由）[cite: 19] |
-| Linux | `systemctl list-units --type=service --all`[cite: 19] | `ss -lntp`[cite: 19] |
+| Windows | Windows Service API（PowerShell経由） | TCP待受とプロセス情報（PowerShell経由） |
+| Linux | `systemctl list-units --type=service --all` | `ss -lntp` |
 
-Linuxではロード済みの systemd サービスを一覧にします[cite: 19]。インストール済みだがロードされていない unit ファイルをすべて列挙するものではありません[cite: 19]。待受ポートはプロセス名を使ってサービスに関連付けますが、Linuxの実行ファイルパスは現在取得していません[cite: 19]。
+Linuxではロード済みの systemd サービスを一覧にします。インストール済みだがロードされていない unit ファイルをすべて列挙するものではありません。待受ポートはプロセス名を使ってサービスに関連付けますが、Linuxの実行ファイルパスは現在取得していません。
 
 ### カテゴリ
 
-- Web Server[cite: 19]
-- Container[cite: 19]
-- Database[cite: 19]
-- SSH[cite: 19]
-- Monitoring[cite: 19]
-- Mail[cite: 19]
-- File Share[cite: 19]
-- Virtualization[cite: 19]
-- AI / LLM[cite: 19]
-- Cloud Agent[cite: 19]
-- Security[cite: 19]
-- Other[cite: 19]
+- Web Server
+- Container
+- Database
+- SSH
+- Monitoring
+- Mail
+- File Share
+- Virtualization
+- AI / LLM
+- Cloud Agent
+- Security
+- Other
 
-サービス名の内部定義に基づいて分類します[cite: 19]。未登録のサービスは Other に表示されます[cite: 19]。
+サービス名の内部定義に基づいて分類します。未登録のサービスは Other に表示されます。
 
 ### 状態表示
 
-- 🟢 起動中[cite: 19]
-- 🔴 停止中[cite: 19]
-- ⚪ 不明[cite: 19]
+- 🟢 起動中
+- 🔴 停止中
+- ⚪ 不明
 
 ### URL起動
 
-待受ポートを検出した Web Server、Monitoring、AI / LLM カテゴリのサービスには、`localhost` を使ったURLを設定します[cite: 19]。ポート443の場合は HTTPS、それ以外は HTTP として扱います[cite: 19]。これはポート番号から推測したURLであり、実際のWeb画面やTLS設定を検証するものではありません[cite: 19]。
+待受ポートを検出した Web Server、Monitoring、AI / LLM カテゴリのサービスには、`localhost` を使ったURLを設定します。ポート443の場合は HTTPS、それ以外は HTTP として扱います。これはポート番号から推測したURLであり、実際のWeb画面やTLS設定を検証するものではありません。
 
-カスタムサービスは HTTP または HTTPS のURLを登録できます[cite: 19]。URLが正しく設定されている場合、詳細画面から既定ブラウザーで開けます[cite: 19]。
+カスタムサービスは HTTP または HTTPS のURLを登録できます。URLが正しく設定されている場合、詳細画面から既定ブラウザーで開けます。
 
 ---
 
 ## セキュリティ診断
 
-診断は現在のマシン上の設定情報を読み取るもので、設定変更や外部ホストへのスキャンは行いません[cite: 19]。
+診断は現在のマシン上の設定情報を読み取るもので、設定変更や外部ホストへのスキャンは行いません。
 
 ### 確認項目
 
 | 項目 | Linux | Windows |
 | --- | --- | --- |
-| Firewall | UFW / firewalld[cite: 19] | Windows Firewallプロファイル[cite: 19] |
-| 要注意ポート | `ss` によるTCP待受[cite: 19] | WindowsのTCP待受[cite: 19] |
-| SSH設定 | `sshd -T` の実効設定[cite: 19] | 未対応[cite: 19] |
-| HTTPSポート | TCP/80・443の待受[cite: 19] | TCP/80・443の待受[cite: 19] |
-| Docker / Podman | ローカルの稼働コンテナー、privileged設定、ポート公開[cite: 19] | 未対応[cite: 19] |
+| Firewall | UFW / firewalld | Windows Firewallプロファイル |
+| 要注意ポート | `ss` によるTCP待受 | WindowsのTCP待受 |
+| SSH設定 | `sshd -T` の実効設定 | 未対応 |
+| HTTPSポート | TCP/80・443の待受 | TCP/80・443の待受 |
+| Docker / Podman | ローカルの稼働コンテナー、privileged設定、ポート公開 | 未対応 |
 
-要注意ポートは `3306`、`5432`、`6379`、`9200`、`5601`、`27017`、`5000` です[cite: 19]。これらが全インターフェース（`0.0.0.0` / `::`）で待ち受けている場合に注意を表示します[cite: 19]。待受が検出されても、外部から到達可能かどうかは Firewall や NAT などに依存します[cite: 19]。
+要注意ポートは `3306`、`5432`、`6379`、`9200`、`5601`、`27017`、`5000` です。これらが全インターフェース（`0.0.0.0` / `::`）で待ち受けている場合に注意を表示します。待受が検出されても、外部から到達可能かどうかは Firewall や NAT などに依存します。
 
-Docker はローカルの Unix ソケット、Podman はローカルモードで確認します[cite: 19]。リモート Docker context やリモート Podman には接続しません[cite: 19]。ランタイムへの接続や設定の取得ができない場合は「不明」と表示します[cite: 19]。
+Docker はローカルの Unix ソケット、Podman はローカルモードで確認します。リモート Docker context やリモート Podman には接続しません。ランタイムへの接続や設定の取得ができない場合は「不明」と表示します。
 
 ### スコア
 
-診断項目の警告に応じて100点から減点し、次の基準で評価します[cite: 19]。
+診断項目の警告に応じて100点から減点し、次の基準で評価します。
 
 | 評価 | 点数 |
 | --- | --- |
-| A | 95～100[cite: 19] |
-| B | 80～94[cite: 19] |
-| C | 60～79[cite: 19] |
-| D | 0～59[cite: 19] |
+| A | 95～100 |
+| B | 80～94 |
+| C | 60～79 |
+| D | 0～59 |
 
-確認できなかった項目は問題なしとは扱わず、評価に「暫定」を付けます[cite: 19]。診断は基本的な設定確認であり、脆弱性の有無や実際の外部到達性を保証しません[cite: 19]。HTTPSポートの検出も、TLS設定や証明書の有効性を検証するものではありません[cite: 19]。
+確認できなかった項目は問題なしとは扱わず、評価に「暫定」を付けます。診断は基本的な設定確認であり、脆弱性の有無や実際の外部到達性を保証しません。HTTPSポートの検出も、TLS設定や証明書の有効性を検証するものではありません。
 
 ---
 
@@ -148,5 +150,36 @@ esd diff
 # 起動中サービスのみ絞り込み、HTMLレポートとして保存
 esd scan --only-running --format html --output report.html
 
-# cron定期監視用：要約のみ出力し、終了コード（0〜2）でアラート連携
+# cron定期監視用：要約のみ出力し、終了コード（0〜3）でアラート連携
 esd scan --quiet --format text
+```
+
+### 終了コード（cron・外部監視連携用）
+
+| 終了コード | 意味 |
+| --- | --- |
+| `0` | 警告なし（安全） |
+| `1` | 注意レベルの警告あり |
+| `2` | 危険レベルの警告あり（DBポート全開放など） |
+| `3` | 診断実行自体に失敗 |
+
+### 主なオプション
+
+| オプション | 説明 |
+| --- | --- |
+| `--format text\|json\|markdown\|html` | 出力フォーマット（デフォルト: `text`） |
+| `--output <path>` | ファイル出力（省略時は標準出力） |
+| `--only-running` | 起動中サービスのみに絞り込み |
+| `--category <name>` | 指定カテゴリのみ表示（GUI版と同一の名称） |
+| `--save-snapshot [path]` | 今回の診断結果をスナップショットとして保存 |
+| `--diff` | 保存時に前回スナップショットとの差分も表示 |
+| `--no-color` | カラー表示を無効化（パイプ時は自動で無効） |
+| `--quiet` | スコアと警告（要約）のみ出力 |
+
+```bash
+esd version              # バージョン表示
+esd help                 # ヘルプ表示
+esd diff                 # 前回スナップショットとの差分のみ表示
+```
+
+スナップショット保存先: `~/.local/share/easy-service-diagnosis/snapshots/snapshot.json`
