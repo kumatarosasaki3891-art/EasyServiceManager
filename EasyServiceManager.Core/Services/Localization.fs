@@ -394,6 +394,11 @@ module Localization =
                 "  0: Sem avisos\n  1: Avisos encontrados (nível de atenção)\n  2: Avisos críticos (ex.: portas de BD expostas em todas as interfaces, certificado expirado)\n  3: Erro de execução do diagnóstico";
                 "  0: Предупреждений нет\n  1: Есть предупреждения\n  2: Есть критические проблемы (открытые порты БД, истёкший сертификат и т.д.)\n  3: Ошибка выполнения диагностики"
             |]
+            "⤢ 大きく見る", [| "⤢ 大きく見る"; "⤢ Expand"; "⤢ 放大查看"; "⤢ 放大檢視"; "⤢ 크게 보기"; "⤢ Phóng to"; "⤢ Vergrößern"; "⤢ Agrandir"; "⤢ Ampliar"; "⤢ Espandi"; "⤢ Ampliar"; "⤢ Развернуть" |]
+            "正常 {0}", [| "正常 {0}"; "OK {0}"; "正常 {0}"; "正常 {0}"; "정상 {0}"; "Bình thường {0}"; "OK {0}"; "OK {0}"; "Correcto {0}"; "OK {0}"; "OK {0}"; "Норма {0}" |]
+            "警告 {0}", [| "警告 {0}"; "Warning {0}"; "警告 {0}"; "警告 {0}"; "경고 {0}"; "Cảnh báo {0}"; "Warnung {0}"; "Avertissement {0}"; "Advertencia {0}"; "Avviso {0}"; "Aviso {0}"; "Предупр. {0}" |]
+            "情報 {0}", [| "情報 {0}"; "Info {0}"; "信息 {0}"; "資訊 {0}"; "정보 {0}"; "Thông tin {0}"; "Info {0}"; "Info {0}"; "Info {0}"; "Info {0}"; "Info {0}"; "Инфо {0}" |]
+            "不明 {0}", [| "不明 {0}"; "Unknown {0}"; "未知 {0}"; "不明 {0}"; "알 수 없음 {0}"; "Không rõ {0}"; "Unbekannt {0}"; "Inconnu {0}"; "Desconocido {0}"; "Sconosciuto {0}"; "Desconhecido {0}"; "Неизв. {0}" |]
         ]
 
     /// <summary>指定された言語コードに対応する配列インデックスを取得します。</summary>

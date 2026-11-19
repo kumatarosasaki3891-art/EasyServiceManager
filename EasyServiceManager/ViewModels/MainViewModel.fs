@@ -133,6 +133,7 @@ type MainViewModel() as this =
     let mutable isQrClientConnected = false
     let mutable saveFileHandler: Func<string, string, string, Task<string>> = null
     let mutable isInfoDialogOpen = false
+    let mutable isDiagnosticsModalOpen = false
     let mutable isUpdatingMasterData = false
     let mutable masterDataUpdateStatus = ""
 
@@ -245,6 +246,12 @@ type MainViewModel() as this =
     let applyPresetCommand = RelayCommand<CustomPreset>(Action<CustomPreset>(fun p -> this.ApplyPreset(p)))
     let openInfoDialogCommand = RelayCommand(Action(fun () -> this.OpenInfoDialog()))
     let closeInfoDialogCommand = RelayCommand(Action(fun () -> this.IsInfoDialogOpen <- false))
+    let openDiagnosticsModalCommand = RelayCommand(Action(fun () -> this.IsDiagnosticsModalOpen <- true))
+    let closeDiagnosticsModalCommand = RelayCommand(Action(fun () -> this.IsDiagnosticsModalOpen <- false))
+    let openExportFromDiagnosticsCommand =
+        RelayCommand(Action(fun () ->
+            this.IsDiagnosticsModalOpen <- false
+            this.OpenExportModal()))
     let updateMasterDataCommand = RelayCommand(Action(fun () -> this.UpdateMasterDataAsync(silent = false) |> Async.Start))
     let openWebsiteCommand = RelayCommand(Action(fun () -> this.OpenExternalUrl(MasterDataRepository.WebsiteUrl)))
     let openInstagramCommand = RelayCommand(Action(fun () -> this.OpenExternalUrl(MasterDataRepository.InstagramUrl)))
@@ -296,7 +303,10 @@ type MainViewModel() as this =
                       "DefinitionDateText"; "InfoDialogTitle"; "CurrentVersionHeader"; "LatestVersionHeader"
                       "LatestAppVersionText"; "AppUpdateAvailableText"; "ViewLatestVersionLabel"
                       "UpdateMasterDataButtonLabel"; "MasterDataUpdateStatus"; "WebsiteButtonLabel"
-                      "ReleasesButtonLabel"; "PrivacyNoticeText" ] do
+                      "ReleasesButtonLabel"; "PrivacyNoticeText"; "ExpandDiagnosticsButtonLabel"
+                      "FindingsCountBadgeText"; "GoodFindingsCountLabel"; "WarningFindingsCountLabel"
+                      "InfoFindingsCountLabel"; "UnknownFindingsCountLabel"; "HasInfoFindings"
+                      "HasUnknownFindings" ] do
                     this.OnPropertyChanged(propertyName)
                 updateQrDisplay()
                 refreshVisible()
@@ -317,6 +327,22 @@ type MainViewModel() as this =
     member _.WarningCountLabel = Localization.format languageCode "{0} 件の警告" [| box (securityFindings |> Seq.filter (fun finding -> finding.Level = FindingLevel.Warning) |> Seq.length) |]
     member _.SecurityRefreshLabel = localize "スキャン結果を更新"
     member _.DiagnosticItemsLabel = localize "診断項目"
+    member _.ExpandDiagnosticsButtonLabel = localize "⤢ 大きく見る"
+    member _.FindingsCountBadgeText = string securityFindings.Count
+    member _.GoodFindingsCountLabel =
+        let n = securityFindings |> Seq.filter (fun f -> f.Level = FindingLevel.Good) |> Seq.length
+        Localization.format languageCode "正常 {0}" [| box n |]
+    member _.WarningFindingsCountLabel =
+        let n = securityFindings |> Seq.filter (fun f -> f.Level = FindingLevel.Warning) |> Seq.length
+        Localization.format languageCode "警告 {0}" [| box n |]
+    member _.InfoFindingsCountLabel =
+        let n = securityFindings |> Seq.filter (fun f -> f.Level = FindingLevel.Information) |> Seq.length
+        Localization.format languageCode "情報 {0}" [| box n |]
+    member _.UnknownFindingsCountLabel =
+        let n = securityFindings |> Seq.filter (fun f -> f.Level = FindingLevel.Unknown) |> Seq.length
+        Localization.format languageCode "不明 {0}" [| box n |]
+    member _.HasInfoFindings = securityFindings |> Seq.exists (fun f -> f.Level = FindingLevel.Information)
+    member _.HasUnknownFindings = securityFindings |> Seq.exists (fun f -> f.Level = FindingLevel.Unknown)
     member _.DetailTitle = localize "サービス詳細"
     member _.NoSelectedServiceText = localize "サービスを選択すると詳細が表示されます。"
     member _.ServiceNameLabel = localize "サービス名"
@@ -572,6 +598,9 @@ type MainViewModel() as this =
     member _.SwitchQrIpCommand: ICommand = switchQrIpCommand
     member _.OpenInfoDialogCommand: ICommand = openInfoDialogCommand
     member _.CloseInfoDialogCommand: ICommand = closeInfoDialogCommand
+    member _.OpenDiagnosticsModalCommand: ICommand = openDiagnosticsModalCommand
+    member _.CloseDiagnosticsModalCommand: ICommand = closeDiagnosticsModalCommand
+    member _.OpenExportFromDiagnosticsCommand: ICommand = openExportFromDiagnosticsCommand
     member _.UpdateMasterDataCommand: ICommand = updateMasterDataCommand
     member _.OpenWebsiteCommand: ICommand = openWebsiteCommand
     member _.OpenInstagramCommand: ICommand = openInstagramCommand
@@ -581,6 +610,10 @@ type MainViewModel() as this =
     member this.IsInfoDialogOpen
         with get () = isInfoDialogOpen
         and set value = this.SetProperty(&isInfoDialogOpen, value) |> ignore
+
+    member this.IsDiagnosticsModalOpen
+        with get () = isDiagnosticsModalOpen
+        and set value = this.SetProperty(&isDiagnosticsModalOpen, value) |> ignore
 
     member this.IsUpdatingMasterData
         with get () = isUpdatingMasterData
@@ -624,6 +657,15 @@ type MainViewModel() as this =
         this.NotifyMasterDataProperties()
         this.IsInfoDialogOpen <- true
 
+    member private this.NotifySecuritySummaryProperties() =
+        for propertyName in
+            [ "SecurityFindings"; "SecurityScoreText"; "SecurityGrade"; "SecurityGradeLabel"
+              "SecurityGradeLetter"; "IsProvisional"; "ProvisionalBadgeText"; "WarningCountLabel"
+              "SecurityCardColor"; "FindingsCountBadgeText"; "GoodFindingsCountLabel"
+              "WarningFindingsCountLabel"; "InfoFindingsCountLabel"; "UnknownFindingsCountLabel"
+              "HasInfoFindings"; "HasUnknownFindings" ] do
+            this.NotifyChanged(propertyName)
+
     /// <summary>キャッシュ済みサービス・リスナーで診断のみ再評価します。</summary>
     member private this.ReInspectWithCurrentContext() =
         if not isScanning && allServices.Count > 0 then
@@ -647,15 +689,7 @@ type MainViewModel() as this =
                         | None ->
                             securityScoreText <- "未評価"
                             securityGrade <- "—"
-                        this.NotifyChanged("SecurityFindings")
-                        this.NotifyChanged("SecurityScoreText")
-                        this.NotifyChanged("SecurityGrade")
-                        this.NotifyChanged("SecurityGradeLabel")
-                        this.NotifyChanged("SecurityGradeLetter")
-                        this.NotifyChanged("IsProvisional")
-                        this.NotifyChanged("ProvisionalBadgeText")
-                        this.NotifyChanged("WarningCountLabel")
-                        this.NotifyChanged("SecurityCardColor")
+                        this.NotifySecuritySummaryProperties()
                     ))
                 with _ -> ()
             ) |> ignore
@@ -759,15 +793,7 @@ type MainViewModel() as this =
                             securityScoreText <- "未評価"
                             securityGrade <- "—"
 
-                        this.NotifyChanged("SecurityFindings")
-                        this.NotifyChanged("SecurityScoreText")
-                        this.NotifyChanged("SecurityGrade")
-                        this.NotifyChanged("SecurityGradeLabel")
-                        this.NotifyChanged("SecurityGradeLetter")
-                        this.NotifyChanged("IsProvisional")
-                        this.NotifyChanged("ProvisionalBadgeText")
-                        this.NotifyChanged("WarningCountLabel")
-                        this.NotifyChanged("SecurityCardColor")
+                        this.NotifySecuritySummaryProperties()
                     finally
                         isScanning <- false
                         this.NotifyChanged("IsScanning")

@@ -355,6 +355,20 @@ try
             failwithf "Japanese kana leaked in full html output for '%s'" lang
     check "Full text/json/markdown/html outputs contain zero kana leaks across all 11 non-ja languages" true
 
+    // 10. SecurityFinding 要約表示・減点バッジプロパティ検証
+    let multiLineFinding =
+        SecurityFinding(
+            "要注意ポート（DB・全公開）",
+            "ポート 6379 が全インターフェースで待ち受けています。\nFirewallも無効のため、外部から到達できる可能性が高いです。\n認証設定（Redis: requirepass / protected-mode）の確認を推奨します。",
+            FindingLevel.Warning,
+            25)
+    check "SummaryDetail returns first line only (JA)" (multiLineFinding.SummaryDetail = "ポート 6379 が全インターフェースで待ち受けています。" && not (multiLineFinding.SummaryDetail.Contains("\n")))
+    check "HasDeduction true and DeductionLabel JA" (multiLineFinding.HasDeduction && multiLineFinding.DeductionLabel = "-25点")
+    multiLineFinding.LanguageCode <- "en-US"
+    check "SummaryDetail returns first line only (EN)" (multiLineFinding.SummaryDetail = "Port(s) 6379 listening on all interfaces." && not (multiLineFinding.SummaryDetail.Contains("\n")))
+    check "DeductionLabel translated EN" (multiLineFinding.DeductionLabel = "-25 pts")
+    check "Good finding HasDeduction false" (not f31.HasDeduction && f31.DeductionLabel = "")
+
     printfn "\nALL %d VERIFICATION CHECKS PASSED!" checks
 finally
     MasterDataRepository.CustomDatabasePath <- None

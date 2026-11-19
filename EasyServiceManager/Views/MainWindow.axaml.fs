@@ -4,6 +4,7 @@ open System
 open System.Threading.Tasks
 open Avalonia
 open Avalonia.Controls
+open Avalonia.Input
 open Avalonia.Markup.Xaml
 open Avalonia.Platform.Storage
 open EasyServiceManager.ViewModels
@@ -23,6 +24,14 @@ type MainWindow () as this =
                 vm.SaveFileHandler <- Func<string, string, string, Task<string>>(fun defaultName ext filterName ->
                     this.PickSaveFileAsync(defaultName, ext, filterName))
             | _ -> ())
+        this.KeyDown.Add(fun e ->
+            if e.Key = Key.Escape then
+                match this.DataContext with
+                | :? MainViewModel as vm ->
+                    if vm.IsDiagnosticsModalOpen then vm.IsDiagnosticsModalOpen <- false
+                    elif vm.IsInfoDialogOpen then vm.IsInfoDialogOpen <- false
+                    elif vm.IsExportModalOpen then vm.CloseExportModal()
+                | _ -> ())
         this.Closing.Add(fun _ ->
             match this.DataContext with
             | :? MainViewModel as vm -> vm.Cleanup()

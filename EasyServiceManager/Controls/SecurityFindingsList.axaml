@@ -1,0 +1,94 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:EasyServiceManager.ViewModels"
+             xmlns:model="using:EasyServiceManager.Models"
+             x:Class="EasyServiceManager.Controls.SecurityFindingsList"
+             x:DataType="vm:MainViewModel">
+    <UserControl.Styles>
+        <!-- 通常表示（拡大モーダル：全文・根拠・減点バッジ表示） -->
+        <Style Selector="Grid.findings-root Border.finding-card">
+            <Setter Property="Padding" Value="14,12" />
+            <Setter Property="Margin" Value="0,0,0,9" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="BorderThickness" Value="4,1,1,1" />
+        </Style>
+        <Style Selector="Grid.findings-root TextBlock.finding-icon">
+            <Setter Property="FontSize" Value="16" />
+        </Style>
+        <Style Selector="Grid.findings-root TextBlock.finding-title">
+            <Setter Property="FontSize" Value="13.5" />
+        </Style>
+        <Style Selector="Grid.findings-root Panel.finding-deduction-slot">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+        <Style Selector="Grid.findings-root TextBlock.finding-detail-full">
+            <Setter Property="IsVisible" Value="True" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="LineHeight" Value="18" />
+        </Style>
+        <Style Selector="Grid.findings-root TextBlock.finding-detail-summary">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+
+        <!-- 要約表示（右パネル：コンパクト・1行抜粋） -->
+        <Style Selector="Grid.findings-root.compact Border.finding-card">
+            <Setter Property="Padding" Value="9,7" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+            <Setter Property="CornerRadius" Value="7" />
+            <Setter Property="BorderThickness" Value="3,1,1,1" />
+        </Style>
+        <Style Selector="Grid.findings-root.compact TextBlock.finding-icon">
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style Selector="Grid.findings-root.compact TextBlock.finding-title">
+            <Setter Property="FontSize" Value="11.5" />
+        </Style>
+        <Style Selector="Grid.findings-root.compact Panel.finding-deduction-slot">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="Grid.findings-root.compact TextBlock.finding-detail-full">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="Grid.findings-root.compact TextBlock.finding-detail-summary">
+            <Setter Property="IsVisible" Value="True" />
+            <Setter Property="FontSize" Value="10" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid x:Name="RootGrid" Classes="findings-root">
+        <ItemsControl ItemsSource="{Binding SecurityFindings}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="model:SecurityFinding">
+                    <Border Classes="finding-card" Background="White" BorderBrush="{Binding Color}">
+                        <Grid ColumnDefinitions="24,*">
+                            <TextBlock Classes="finding-icon" Text="{Binding Icon}" VerticalAlignment="Top" />
+                            <StackPanel Grid.Column="1" Spacing="4">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                    <TextBlock Classes="finding-title" Text="{Binding Title}"
+                                               FontWeight="SemiBold" Foreground="#18212B"
+                                               TextWrapping="Wrap" VerticalAlignment="Center" />
+                                    <Panel Classes="finding-deduction-slot" Grid.Column="1" VerticalAlignment="Top">
+                                        <Border IsVisible="{Binding HasDeduction}"
+                                                Background="{Binding DeductionBadgeBg}"
+                                                CornerRadius="4" Padding="6,2">
+                                            <TextBlock Text="{Binding DeductionLabel}"
+                                                       Foreground="{Binding DeductionBadgeFg}"
+                                                       FontSize="10" FontWeight="Bold" />
+                                        </Border>
+                                    </Panel>
+                                </Grid>
+                                <TextBlock Classes="finding-detail-full"
+                                           Text="{Binding Detail}"
+                                           Foreground="#4A5A6B" TextWrapping="Wrap" />
+                                <TextBlock Classes="finding-detail-summary"
+                                           Text="{Binding SummaryDetail}"
+                                           Foreground="#687887" TextWrapping="Wrap"
+                                           MaxLines="2" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+</UserControl>
