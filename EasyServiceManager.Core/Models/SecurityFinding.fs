@@ -16,8 +16,12 @@ type SecurityFinding(title: string, detail: string, level: FindingLevel, deducti
 
     let mutable languageCode = "ja-JP"
 
+    /// <summary>未翻訳の元タイトル（判定ロジック用）。</summary>
+    member _.RawTitle = title
+    /// <summary>未翻訳の元詳細（判定ロジック用）。</summary>
+    member _.RawDetail = detail
     /// <summary>翻訳済み項目タイトル。</summary>
-    member _.Title = Localization.translate languageCode title
+    member _.Title = Localization.translateText languageCode title
     /// <summary>翻訳済み詳細説明。</summary>
     member _.Detail = Localization.translateText languageCode detail
     /// <summary>深刻度レベル。</summary>

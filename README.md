@@ -6,12 +6,12 @@
 
 [English](README_EN.md) | 日本語
 
-「このPCやサーバーで何が動いているか」を1画面で把握するための、ローカル完結型のサービス発見・簡易セキュリティ診断アプリです。  
-主要サービスをカテゴリ別に可視化し、Firewallや待受ポート・バインドアドレスの基本的なローカルセキュリティ設定を安全に点検します。
+「このPCやサーバーで何が動いているか」を1画面で把握するための、ローカル主体・読み取り専用のサービス発見・簡易セキュリティ診断アプリです。  
+主要サービスをカテゴリ別に可視化し、Firewall、待受ポート・バインドアドレス（L0/L1/L2）、TLS証明書有効期限、DNS設定、稼働ランタイムのバージョン・緊急アドバイザリを安全に点検します。
 
-> A local-first, read-only service discovery and port exposure diagnostic tool for Windows and Linux (GUI & headless CLI `esd`)—100% offline with Markdown/HTML export and local Wi-Fi QR transfer.
+> A local-first, read-only service discovery and port exposure diagnostic tool for Windows and Linux (GUI & headless CLI `esd`), with Markdown/HTML export and local Wi-Fi QR transfer.
 
-> サービスの起動・停止や外部への脆弱性スキャンを行う管理ツールではありません。
+> サービスの起動・停止や外部への脆弱性スキャンを行う管理ツールではありません。診断処理は端末内で完結し、バージョン定義データの取得時のみ GitHub (`kuma-master-data`) へ通信します（ユーザーデータや診断結果の送信は行いません）。
 
 ---
 
@@ -41,10 +41,11 @@
 - 12カテゴリ別およびお気に入り一覧での絞り込み
 - サービスの詳細表示と、URLがあるサービスの既定ブラウザー起動
 - カスタムサービスの登録
-- Firewall、要注意ポート、SSH、HTTPSポートの簡易診断（100点満点スコア）
+- Firewall、ポート露出レベル（L0 ローカル / L1 LAN / L2 全公開）、SSH、HTTPS・TLS証明書有効期限、DNS設定、Redis/MongoDB認証設定の簡易診断（100点満点スコア）
+- 稼働中サービス（nginx / Apache httpd / PHP / MySQL / MariaDB / PostgreSQL / Redis）の EOL・緊急アドバイザリ確認（定義取得時のみ GitHub と通信）
 - Linux上のDocker・Podmanコンテナー設定の簡易確認
 - **レポート出力 ＆ スマホへのQRコード転送**（Markdown / HTML保存、同一Wi-Fi内ワンタイムQR転送）
-- **CLI版（`esd`）**: GUI版と同一の診断エンジンを搭載したヘッドレスサーバー・cron監視用コマンド
+- **CLI版（`esd`）**: GUI版と同一の診断エンジンを搭載し、12言語 `--lang` 出力・端末QR表示 (`--qr`)・`update-check` に対応したヘッドレスサーバー・cron監視用コマンド
 - **12言語対応**: 日本語、英語、中国語（簡体字・繁体字）、韓国語、ベトナム語、ドイツ語、フランス語、スペイン語、イタリア語、ポルトガル語、ロシア語
 
 言語は診断結果パネル上部から切り替えられ、選択した言語は設定ファイルに保存されます。Windowsでは `%APPDATA%\EasyServiceManager\settings.json`、Linuxでは `~/.config/EasyServiceManager/settings.json` を使用します。
@@ -109,10 +110,13 @@ Linuxではロード済みの systemd サービスを一覧にします。イン
 | 項目 | Linux | Windows |
 | --- | --- | --- |
 | Firewall | UFW / firewalld | Windows Firewallプロファイル |
-| 要注意ポート | `ss` によるTCP待受 | WindowsのTCP待受 |
+| ポート露出（L0/L1/L2） | `ss` によるDB/管理系/一般ポートとFW連携判定 | WindowsのTCP待受とFW連携判定 |
+| DB認証設定 | Redis / MongoDB 設定ファイルの認証有無確認 | リスナー露出時の認証設定確認推奨 |
 | SSH設定 | `sshd -T` の実効設定 | 未対応 |
-| HTTPSポート | TCP/80・443の待受 | TCP/80・443の待受 |
-| Docker / Podman | ローカルの稼働コンテナー、privileged設定、ポート公開 | 未対応 |
+| HTTPS・証明書期限 | TCP/80・443待受とループバックTLS証明書期限確認 | TCP/80・443待受とループバックTLS証明書期限確認 |
+| DNSチェック | `localhost`・自ホスト名・サービスURL・`/etc/resolv.conf` | `localhost`・自ホスト名・サービスURL・NIC DNS設定 |
+| 版本・緊急advisory | `dpkg-query` / `rpm` による受動バージョン照合 | 実行ファイル `FileVersionInfo`（XAMPP配下PHP含む）照合 |
+| Docker / Podman | ローカルの稼働コンテナー、privileged設定、ポート公開 | ローカル稼働コンテナーの公開ポート確認 |
 
 要注意ポートは `3306`、`5432`、`6379`、`9200`、`5601`、`27017`、`5000` です。これらが全インターフェース（`0.0.0.0` / `::`）で待ち受けている場合に注意を表示します。待受が検出されても、外部から到達可能かどうかは Firewall や NAT などに依存します。
 
@@ -169,17 +173,23 @@ esd scan --quiet --format text
 | --- | --- |
 | `--format text\|json\|markdown\|html` | 出力フォーマット（デフォルト: `text`） |
 | `--output <path>` | ファイル出力（省略時は標準出力） |
+| `--lang <code>` | 出力言語を指定（`ja-JP`, `en-US`, `en`, `zh`, `ko` 等、12言語対応） |
 | `--only-running` | 起動中サービスのみに絞り込み |
 | `--category <name>` | 指定カテゴリのみ表示（GUI版と同一の名称） |
 | `--save-snapshot [path]` | 今回の診断結果をスナップショットとして保存 |
 | `--diff` | 保存時に前回スナップショットとの差分も表示 |
+| `--qr` | 転送用HTTPサーバーを起動し、端末にQRコードを表示して待機 |
+| `--qr-plain` | 端末QRのANSI背景色付けを無効化 |
+| `--ip <addr>` | QRコード転送に使用するIPアドレスを指定 |
 | `--no-color` | カラー表示を無効化（パイプ時は自動で無効） |
 | `--quiet` | スコアと警告（要約）のみ出力 |
 
 ```bash
-esd version              # バージョン表示
+esd version              # バージョン・Releases URL表示
 esd help                 # ヘルプ表示
 esd diff                 # 前回スナップショットとの差分のみ表示
+esd update-check         # アプリの新バージョン有無を確認（実行時のみ通信）
+esd update-defs          # バージョン定義データを更新（実行時のみ通信）
 ```
 
 スナップショット保存先: `~/.local/share/easy-service-diagnosis/snapshots/snapshot.json`

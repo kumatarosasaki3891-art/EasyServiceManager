@@ -213,7 +213,7 @@ module ServiceDiscovery =
         | None -> ""
 
     /// <summary>アドレス一覧を 0.0.0.0 / 127.0.0.1 等へ正規化します。</summary>
-    let private normalizeBindAddress (addresses: string seq) =
+    let normalizeBindAddress (addresses: string seq) =
         let list = addresses |> Seq.map (fun a -> a.Trim()) |> Seq.toList
         let hasWildcard =
             list |> List.exists (fun a -> a = "0.0.0.0" || a = "::" || a = "*" || a = "[::]" || a = "[::0]")
@@ -231,8 +231,9 @@ module ServiceDiscovery =
 
     /// <summary>Linux の ss コマンド出力からリスナー一覧を解析します。</summary>
     let private parseLinuxListeners (output: string) : ListenerInfo list =
-        let raw = ResizeArray<string * int * string>()
+        let raw = ResizeArray<string * int * int * string>()
         let procPattern = Regex("users:\\(\\(\"([^\"]+)\"")
+        let pidPattern = Regex("pid=(\\d+)")
         for line in output.Split([| '\r'; '\n' |], StringSplitOptions.RemoveEmptyEntries) do
             let columns = Regex.Split(line.Trim(), "\\s+")
             if columns.Length >= 4 then
@@ -244,14 +245,39 @@ module ServiceDiscovery =
                         let host = localAddress.Substring(0, localAddress.Length - portMatch.Value.Length)
                         let procMatch = procPattern.Match(line)
                         let procName = if procMatch.Success then procMatch.Groups.[1].Value else ""
-                        raw.Add((host, port, procName))
+                        let pidMatch = pidPattern.Match(line)
+                        let mutable pid = 0
+                        if pidMatch.Success then Int32.TryParse(pidMatch.Groups.[1].Value, &pid) |> ignore
+                        raw.Add((host, port, pid, procName))
         raw
-        |> Seq.groupBy (fun (_, port, _) -> port)
+        |> Seq.groupBy (fun (_, port, _, _) -> port)
         |> Seq.map (fun (port, group) ->
-            let addrs = group |> Seq.map (fun (addr, _, _) -> addr)
-            let procName = group |> Seq.tryPick (fun (_, _, p) -> if String.IsNullOrWhiteSpace p then None else Some p) |> Option.defaultValue ""
-            { Port = port; BindAddress = normalizeBindAddress addrs; ProcessId = 0; ProcessName = procName })
+            let addrs = group |> Seq.map (fun (addr, _, _, _) -> addr)
+            let repPid = group |> Seq.tryPick (fun (_, _, pid, _) -> if pid > 0 then Some pid else None) |> Option.defaultValue 0
+            let procName = group |> Seq.tryPick (fun (_, _, _, p) -> if String.IsNullOrWhiteSpace p then None else Some p) |> Option.defaultValue ""
+            { Port = port; BindAddress = normalizeBindAddress addrs; ProcessId = repPid; ProcessName = procName })
         |> Seq.toList
+
+    /// <summary>サービス一覧へリスナーのバインドアドレスと露出レベルコードを付与します。</summary>
+    let applyExposureToServices (services: ServiceEntry array) (listeners: ListenerInfo list) =
+        let listenerByPort =
+            listeners
+            |> List.groupBy (fun l -> l.Port)
+            |> List.map (fun (p, grp) ->
+                let best = grp |> List.maxBy (fun l -> Exposure.rank (Exposure.classify l.BindAddress))
+                p, best)
+            |> Map.ofList
+        for service in services do
+            if not (String.IsNullOrWhiteSpace service.Ports) then
+                let matched =
+                    service.Ports.Split([| ',' |], StringSplitOptions.RemoveEmptyEntries)
+                    |> Array.choose (fun pText ->
+                        let mutable p = 0
+                        if Int32.TryParse(pText.Trim(), &p) then Map.tryFind p listenerByPort else None)
+                if matched.Length > 0 then
+                    let highest = matched |> Array.maxBy (fun l -> Exposure.rank (Exposure.classify l.BindAddress))
+                    service.BindAddress <- highest.BindAddress
+                    service.ExposureCode <- Exposure.toCode (Exposure.classify highest.BindAddress)
 
     /// <summary>Linux (systemd / ss) 環境のサービス一覧とリスナー一覧を検出します。</summary>
     let private detectLinuxWithListeners () =
@@ -527,6 +553,8 @@ module ServiceDiscovery =
                                 false,
                                 false,
                                 false)
+                        entry.BindAddress <- l.BindAddress
+                        entry.ExposureCode <- Exposure.toCode (Exposure.classify l.BindAddress)
                         entry.IsDiff <- true
                         entry.DiffNote <- note
                         extraEntries.Add(entry)
@@ -536,12 +564,18 @@ module ServiceDiscovery =
                 else Array.append (extraEntries.ToArray()) services
             combinedServices, true, Seq.toList diffMessages
 
-    /// <summary>実行中のOSに応じてサービス一覧を検出します。</summary>
-    let detect () =
-        let services, _ =
+    /// <summary>実行中のOSに応じてサービス一覧とリスナー一覧を検出します。</summary>
+    let detectWithListeners () =
+        let services, listeners =
             if RuntimeInformation.IsOSPlatform(OSPlatform.Windows) then detectWindowsWithListeners()
             elif RuntimeInformation.IsOSPlatform(OSPlatform.Linux) then detectLinuxWithListeners()
             else failwith "このOSでのサービス自動検出はまだ対応していません。"
+        applyExposureToServices services listeners
+        services, listeners
+
+    /// <summary>実行中のOSに応じてサービス一覧を検出します。</summary>
+    let detect () =
+        let services, _ = detectWithListeners ()
         services
 
     /// <summary>2つのスナップショットオブジェクトを比較し、差分情報を返します。</summary>
@@ -560,14 +594,18 @@ module ServiceDiscovery =
                 |> Array.map (fun l ->
                     { Port = l.Port; BindAddress = l.BindAddress; ProcessId = 0; ProcessName = l.ProcessName })
                 |> Array.toList
+        applyExposureToServices services listeners
         compareSnapshots (Some prev) services listeners
+
+    /// <summary>サービス一覧とリスナー一覧を検出し、前回スキャンとの差分を比較してスナップショットを更新します。</summary>
+    let detectAndCompareWithListeners () =
+        let services, listeners = detectWithListeners ()
+        let prevOpt = loadPreviousSnapshot ()
+        saveCurrentSnapshot services listeners
+        let combinedServices, hasPrev, diffMessages = compareSnapshots prevOpt services listeners
+        combinedServices, listeners, hasPrev, diffMessages
 
     /// <summary>サービス一覧を検出し、前回スキャンとの差分を比較してスナップショットを更新します。</summary>
     let detectAndCompare () =
-        let services, listeners =
-            if RuntimeInformation.IsOSPlatform(OSPlatform.Windows) then detectWindowsWithListeners()
-            elif RuntimeInformation.IsOSPlatform(OSPlatform.Linux) then detectLinuxWithListeners()
-            else failwith "このOSでのサービス自動検出はまだ対応していません。"
-        let prevOpt = loadPreviousSnapshot ()
-        saveCurrentSnapshot services listeners
-        compareSnapshots prevOpt services listeners
+        let combinedServices, _, hasPrev, diffMessages = detectAndCompareWithListeners ()
+        combinedServices, hasPrev, diffMessages

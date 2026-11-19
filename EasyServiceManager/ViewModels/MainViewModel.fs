@@ -58,6 +58,16 @@ type MainViewModel() as this =
         [ "Web Server"; "Container"; "Database"; "SSH"; "Monitoring"; "Mail"; "File Share"
           "Virtualization"; "AI / LLM"; "Cloud Agent"; "Security"; "Remote Access"; "Other" ]
 
+    do MasterDataRepository.Initialize()
+
+    let currentAppVersion =
+        let ver = typeof<MainViewModel>.Assembly.GetName().Version
+        if isNull ver then "1.1.0"
+        else sprintf "%d.%d.%d" ver.Major ver.Minor ver.Build
+
+    let mutable masterDataSnapshot = MasterDataRepository.GetSnapshot()
+    let mutable lastListeners: ListenerInfo list = []
+
     let mutable languageCode = AppSettings.loadLanguage ()
     let languageOptions = Localization.languages |> Array.map (fun (key, label) -> LanguageOption(key, label))
     let mutable selectedLanguage = languageOptions |> Array.find (fun option -> option.Key = languageCode)
@@ -122,6 +132,9 @@ type MainViewModel() as this =
     let mutable qrCountdownCts: CancellationTokenSource option = None
     let mutable isQrClientConnected = false
     let mutable saveFileHandler: Func<string, string, string, Task<string>> = null
+    let mutable isInfoDialogOpen = false
+    let mutable isUpdatingMasterData = false
+    let mutable masterDataUpdateStatus = ""
 
     let localize key = Localization.translate languageCode key
 
@@ -230,8 +243,18 @@ type MainViewModel() as this =
     let startQrTransferCommand = RelayCommand(Action(fun () -> this.StartQrTransfer()))
     let switchQrIpCommand = RelayCommand(Action(fun () -> this.SwitchQrIp()))
     let applyPresetCommand = RelayCommand<CustomPreset>(Action<CustomPreset>(fun p -> this.ApplyPreset(p)))
+    let openInfoDialogCommand = RelayCommand(Action(fun () -> this.OpenInfoDialog()))
+    let closeInfoDialogCommand = RelayCommand(Action(fun () -> this.IsInfoDialogOpen <- false))
+    let updateMasterDataCommand = RelayCommand(Action(fun () -> this.UpdateMasterDataAsync(silent = false) |> Async.Start))
+    let openWebsiteCommand = RelayCommand(Action(fun () -> this.OpenExternalUrl(MasterDataRepository.WebsiteUrl)))
+    let openInstagramCommand = RelayCommand(Action(fun () -> this.OpenExternalUrl(MasterDataRepository.InstagramUrl)))
+    let openReleasesCommand = RelayCommand(Action(fun () -> this.OpenExternalUrl(MasterDataRepository.ReleasesUrl)))
+    let openLatestVersionCommand = RelayCommand(Action(fun () -> this.OpenLatestVersionPage()))
 
-    do this.Refresh()
+    do
+        this.Refresh()
+        if MasterDataRepository.ShouldAutoFetch(DateTimeOffset.UtcNow) then
+            this.UpdateMasterDataAsync(silent = true) |> Async.Start
 
     member private this.NotifyChanged(propertyName: string) = this.OnPropertyChanged(propertyName)
 
@@ -269,7 +292,11 @@ type MainViewModel() as this =
                       "ExportModalDescription"; "SaveMarkdownButtonLabel"; "SaveHtmlButtonLabel"
                       "StartQrTransferButtonLabel"; "CloseModalButtonLabel"; "QrGuideLabel"
                       "QrSubGuideLabel"; "QrSecurityNoteLabel"; "QrInvalidatedLabel"; "RegenerateQrButtonLabel"
-                      "PresetHeadingLabel"; "ContainerIntegrationGuideLabel" ] do
+                      "PresetHeadingLabel"; "ContainerIntegrationGuideLabel"; "ExposureSectionLabel"
+                      "DefinitionDateText"; "InfoDialogTitle"; "CurrentVersionHeader"; "LatestVersionHeader"
+                      "LatestAppVersionText"; "AppUpdateAvailableText"; "ViewLatestVersionLabel"
+                      "UpdateMasterDataButtonLabel"; "MasterDataUpdateStatus"; "WebsiteButtonLabel"
+                      "ReleasesButtonLabel"; "PrivacyNoticeText" ] do
                     this.OnPropertyChanged(propertyName)
                 updateQrDisplay()
                 refreshVisible()
@@ -327,6 +354,39 @@ type MainViewModel() as this =
     member _.RegenerateQrButtonLabel = localize "QRコードを再発行"
     member _.PresetHeadingLabel = localize "プリセットから選択"
     member _.ContainerIntegrationGuideLabel = localize "🐧 簡単コンテナ管理で詳細を確認（近日公開）"
+    member _.ExposureSectionLabel = localize "露出レベル"
+    member _.InfoDialogTitle = localize "アプリ情報"
+    member _.CurrentVersionHeader = localize "現在のバージョン"
+    member _.LatestVersionHeader = localize "最新バージョン"
+    member _.CurrentAppVersionText = currentAppVersion
+    member _.LatestAppVersionText =
+        match MasterDataRepository.TryGetApp(MasterDataRepository.AppId, masterDataSnapshot) with
+        | Some app -> app.Latest
+        | None -> localize "未確認"
+    member _.IsAppOutdated =
+        match MasterDataRepository.TryGetApp(MasterDataRepository.AppId, masterDataSnapshot) with
+        | Some app -> VersionDiagnostics.isAppOutdated currentAppVersion app.Latest
+        | None -> false
+    member _.AppUpdateAvailableText = localize "新しいバージョンがあります"
+    member _.HasStoreUpdateLink =
+        match MasterDataRepository.TryGetApp(MasterDataRepository.AppId, masterDataSnapshot) with
+        | Some app -> app.StoreUrl.IsSome
+        | None -> true
+    member _.ViewLatestVersionLabel = localize "最新版を見る"
+    member _.DefinitionDateText =
+        match MasterDataRepository.GetDefinitionDateText masterDataSnapshot with
+        | Some d -> Localization.format languageCode "定義データ: {0}時点" [| box d |]
+        | None -> localize "定義データ: 未取得"
+    member _.UpdateMasterDataButtonLabel =
+        if isUpdatingMasterData then localize "更新中..." else localize "定義データを更新"
+    member _.CanUpdateMasterData = not isUpdatingMasterData
+    member _.WebsiteButtonLabel = localize "紹介サイト"
+    member _.WebsiteUrlText = MasterDataRepository.WebsiteUrl
+    member _.InstagramButtonLabel = "Instagram"
+    member _.InstagramUrlText = MasterDataRepository.InstagramUrl
+    member _.ReleasesButtonLabel = localize "リリースページ (GitHub Releases)"
+    member _.ReleasesUrlText = MasterDataRepository.ReleasesUrl
+    member _.PrivacyNoticeText = localize "診断処理は端末内で完結します。バージョン定義データの取得時のみ GitHub へ通信し、ユーザーのデータや診断結果を送信することはありません。"
     member _.CustomPresets = customPresets
     member _.ApplyPresetCommand: ICommand = applyPresetCommand
     member _.SecurityCardColor = if securityFindings |> Seq.exists (fun finding -> finding.Level = FindingLevel.Warning) then "#FFF0E8" else "#E8F4EE"
@@ -510,6 +570,118 @@ type MainViewModel() as this =
     member _.SaveHtmlCommand: ICommand = saveHtmlCommand
     member _.StartQrTransferCommand: ICommand = startQrTransferCommand
     member _.SwitchQrIpCommand: ICommand = switchQrIpCommand
+    member _.OpenInfoDialogCommand: ICommand = openInfoDialogCommand
+    member _.CloseInfoDialogCommand: ICommand = closeInfoDialogCommand
+    member _.UpdateMasterDataCommand: ICommand = updateMasterDataCommand
+    member _.OpenWebsiteCommand: ICommand = openWebsiteCommand
+    member _.OpenInstagramCommand: ICommand = openInstagramCommand
+    member _.OpenReleasesCommand: ICommand = openReleasesCommand
+    member _.OpenLatestVersionCommand: ICommand = openLatestVersionCommand
+
+    member this.IsInfoDialogOpen
+        with get () = isInfoDialogOpen
+        and set value = this.SetProperty(&isInfoDialogOpen, value) |> ignore
+
+    member this.IsUpdatingMasterData
+        with get () = isUpdatingMasterData
+        and set value =
+            if this.SetProperty(&isUpdatingMasterData, value) then
+                this.OnPropertyChanged("CanUpdateMasterData")
+                this.OnPropertyChanged("UpdateMasterDataButtonLabel")
+
+    member this.MasterDataUpdateStatus
+        with get () = if String.IsNullOrWhiteSpace masterDataUpdateStatus then "" else localize masterDataUpdateStatus
+        and set value =
+            if this.SetProperty(&masterDataUpdateStatus, value) then
+                this.OnPropertyChanged("HasMasterDataUpdateStatus")
+
+    member _.HasMasterDataUpdateStatus = not (String.IsNullOrWhiteSpace masterDataUpdateStatus)
+
+    member private this.NotifyMasterDataProperties() =
+        this.NotifyChanged("DefinitionDateText")
+        this.NotifyChanged("LatestAppVersionText")
+        this.NotifyChanged("IsAppOutdated")
+        this.NotifyChanged("HasStoreUpdateLink")
+        this.NotifyChanged("AppUpdateAvailableText")
+
+    member private this.OpenExternalUrl(url: string) =
+        if isHttpUrl url then
+            try
+                Process.Start(ProcessStartInfo(url, UseShellExecute = true)) |> ignore
+            with ex ->
+                this.ErrorMessage <- sprintf "ブラウザを起動できませんでした: %s" ex.Message
+
+    member this.OpenLatestVersionPage() =
+        let url =
+            match MasterDataRepository.TryGetApp(MasterDataRepository.AppId, masterDataSnapshot) with
+            | Some app -> app.StoreUrl |> Option.defaultValue MasterDataRepository.ReleasesUrl
+            | None -> MasterDataRepository.ReleasesUrl
+        this.OpenExternalUrl(url)
+
+    member this.OpenInfoDialog() =
+        this.MasterDataUpdateStatus <- ""
+        masterDataSnapshot <- MasterDataRepository.GetSnapshot()
+        this.NotifyMasterDataProperties()
+        this.IsInfoDialogOpen <- true
+
+    /// <summary>キャッシュ済みサービス・リスナーで診断のみ再評価します。</summary>
+    member private this.ReInspectWithCurrentContext() =
+        if not isScanning && allServices.Count > 0 then
+            let svcSnapshot = allServices |> Seq.toList
+            let listenerSnapshot = lastListeners
+            let mdSnapshot = masterDataSnapshot
+            Task.Run(fun () ->
+                try
+                    let findings = SecurityAudit.inspectWithContext svcSnapshot (Some listenerSnapshot) (Some mdSnapshot)
+                    let scoreOpt = SecurityAudit.score findings
+                    Dispatcher.UIThread.Post(Action(fun () ->
+                        securityFindings.Clear()
+                        findings
+                        |> List.iter (fun finding ->
+                            finding.LanguageCode <- languageCode
+                            securityFindings.Add(finding))
+                        match scoreOpt with
+                        | Some(score, grade) ->
+                            securityScoreText <- sprintf "%d / 100" score
+                            securityGrade <- grade
+                        | None ->
+                            securityScoreText <- "未評価"
+                            securityGrade <- "—"
+                        this.NotifyChanged("SecurityFindings")
+                        this.NotifyChanged("SecurityScoreText")
+                        this.NotifyChanged("SecurityGrade")
+                        this.NotifyChanged("SecurityGradeLabel")
+                        this.NotifyChanged("SecurityGradeLetter")
+                        this.NotifyChanged("IsProvisional")
+                        this.NotifyChanged("ProvisionalBadgeText")
+                        this.NotifyChanged("WarningCountLabel")
+                        this.NotifyChanged("SecurityCardColor")
+                    ))
+                with _ -> ()
+            ) |> ignore
+
+    /// <summary>定義データを GitHub から取得してローカル SQLite キャッシュを更新します。</summary>
+    member this.UpdateMasterDataAsync(?silent: bool) =
+        let isSilent = defaultArg silent false
+        async {
+            if not isUpdatingMasterData then
+                Dispatcher.UIThread.Post(Action(fun () ->
+                    this.IsUpdatingMasterData <- true
+                    if not isSilent then this.MasterDataUpdateStatus <- ""))
+                try
+                    let! updated = MasterDataRepository.FetchAndImportAsync()
+                    let snapshot = MasterDataRepository.GetSnapshot()
+                    Dispatcher.UIThread.Post(Action(fun () ->
+                        masterDataSnapshot <- snapshot
+                        if not isSilent then
+                            this.MasterDataUpdateStatus <-
+                                if updated then "定義データを更新しました"
+                                else "定義データの取得に失敗しました（キャッシュを使用します）"
+                        this.NotifyMasterDataProperties()
+                        if updated then this.ReInspectWithCurrentContext()))
+                finally
+                    Dispatcher.UIThread.Post(Action(fun () -> this.IsUpdatingMasterData <- false))
+        }
 
     /// <summary>サービス検出とセキュリティ簡易診断をバックグラウンドで非同期実行して表示を更新します。</summary>
     member this.Refresh() =
@@ -519,17 +691,25 @@ type MainViewModel() as this =
             this.NotifyChanged("CanRefresh")
             this.ErrorMessage <- ""
             this.StatusMessage <- "サービスを検出しています..."
+            let customSnapshot = allServices |> Seq.filter (fun service -> service.IsCustom) |> Seq.toList
+            let mdSnapshot = masterDataSnapshot
             Task.Run(fun () ->
                 let detectedResult =
                     try
-                        let detected, hasPrev, diffs = ServiceDiscovery.detectAndCompare ()
-                        Ok(detected, hasPrev, diffs)
+                        let detected, listeners, hasPrev, diffs = ServiceDiscovery.detectAndCompareWithListeners ()
+                        Ok(detected, listeners, hasPrev, diffs)
                     with ex ->
                         Error ex.Message
 
                 let findingsResult =
                     try
-                        let findings = SecurityAudit.inspect ()
+                        let svcsForAudit, listenersOpt =
+                            match detectedResult with
+                            | Ok(detected, listeners, _, _) ->
+                                ([ yield! detected; yield! customSnapshot ] :> ServiceEntry seq), Some listeners
+                            | Error _ ->
+                                (customSnapshot :> ServiceEntry seq), Some []
+                        let findings = SecurityAudit.inspectWithContext svcsForAudit listenersOpt (Some mdSnapshot)
                         let scoreOpt = SecurityAudit.score findings
                         Ok(findings, scoreOpt)
                     with ex ->
@@ -538,7 +718,8 @@ type MainViewModel() as this =
                 Dispatcher.UIThread.Post(Action(fun () ->
                     try
                         match detectedResult with
-                        | Ok(detected, hasPrev, diffs) ->
+                        | Ok(detected, listeners, hasPrev, diffs) ->
+                            lastListeners <- listeners
                             hasPreviousScan <- hasPrev
                             rawDiffMessages <- diffs
                             let favorites = allServices |> Seq.filter (fun service -> service.IsFavorite) |> Seq.map (fun service -> service.Name) |> Set.ofSeq

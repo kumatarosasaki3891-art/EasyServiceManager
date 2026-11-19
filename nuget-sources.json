@@ -253,6 +253,55 @@
     },
     {
         "type": "file",
+        "url": "https://api.nuget.org/v3-flatcontainer/microsoft.data.sqlite/11.0.0/microsoft.data.sqlite.11.0.0.nupkg",
+        "sha512": "98bd88a73fc056970f8ffc6a8b735355c95dcd1b3cdca27cc9aba712ce733d0e80f46c0ba253a0de3b344a53dec64a7962c005cb288623867b733573a9f66ed6",
+        "dest": "nuget-sources",
+        "dest-filename": "microsoft.data.sqlite.11.0.0.nupkg"
+    },
+    {
+        "type": "file",
+        "url": "https://api.nuget.org/v3-flatcontainer/microsoft.data.sqlite.core/11.0.0/microsoft.data.sqlite.core.11.0.0.nupkg",
+        "sha512": "8e439e9fd36c1663bd083d5fa2c4fdf6768429007deccb407281800307f10787ce207b09b82f8f0be55fee0de6c1337df8c279dc30e2bdd5e6a39ac692ceac51",
+        "dest": "nuget-sources",
+        "dest-filename": "microsoft.data.sqlite.core.11.0.0.nupkg"
+    },
+    {
+        "type": "file",
+        "url": "https://api.nuget.org/v3-flatcontainer/sqlite/3.53.4/sqlite.3.53.4.nupkg",
+        "sha512": "81d145648bacff3b4c8cd1794df9956c47b229264467aa7001ea9a306e429ceb2855ec9296509541c82fc3c9bcff04617ab3e86169932700bdad5b0c03c482ef",
+        "dest": "nuget-sources",
+        "dest-filename": "sqlite.3.53.4.nupkg"
+    },
+    {
+        "type": "file",
+        "url": "https://api.nuget.org/v3-flatcontainer/sqlitepclraw.bundle_e_sqlite3/3.0.5/sqlitepclraw.bundle_e_sqlite3.3.0.5.nupkg",
+        "sha512": "12f980014c25f0c3e20c7b331418933fc84c7635b65597ceab09c20ea00c055043c866bef8614ea6bc38d7a484d8ff339d4387bbe760bc892f4e2702cd23ab2f",
+        "dest": "nuget-sources",
+        "dest-filename": "sqlitepclraw.bundle_e_sqlite3.3.0.5.nupkg"
+    },
+    {
+        "type": "file",
+        "url": "https://api.nuget.org/v3-flatcontainer/sqlitepclraw.config.e_sqlite3/3.0.5/sqlitepclraw.config.e_sqlite3.3.0.5.nupkg",
+        "sha512": "0a25e95ee323ddfeb8fc920d26551b4afed854a3d9dda833c3507331ab2043e0c9f16d62c2100560373afc20e54d3f69f42abdd6da6e75ef7dcc0ea861b5af12",
+        "dest": "nuget-sources",
+        "dest-filename": "sqlitepclraw.config.e_sqlite3.3.0.5.nupkg"
+    },
+    {
+        "type": "file",
+        "url": "https://api.nuget.org/v3-flatcontainer/sqlitepclraw.core/3.0.5/sqlitepclraw.core.3.0.5.nupkg",
+        "sha512": "24209d65527e0f82bb4e151b610195d39cb4732891ce1f0e2ba0965371da381f1e636cd9256ae7dc5b76c604e36d33b7ca63afde09e6a8a40a9b2fcb5f01aa03",
+        "dest": "nuget-sources",
+        "dest-filename": "sqlitepclraw.core.3.0.5.nupkg"
+    },
+    {
+        "type": "file",
+        "url": "https://api.nuget.org/v3-flatcontainer/sqlitepclraw.provider.e_sqlite3/3.0.5/sqlitepclraw.provider.e_sqlite3.3.0.5.nupkg",
+        "sha512": "716ee95a124695ce5b2e2c834509e66991585b5ad1843b4cc6d135fe078dfe2d2e867a2e83978def09b8691833370803251f792537e59203455054ac24f82cc9",
+        "dest": "nuget-sources",
+        "dest-filename": "sqlitepclraw.provider.e_sqlite3.3.0.5.nupkg"
+    },
+    {
+        "type": "file",
         "url": "https://api.nuget.org/v3-flatcontainer/microsoft.netcore.app.runtime.linux-x64/10.0.8/microsoft.netcore.app.runtime.linux-x64.10.0.8.nupkg",
         "sha512": "0c06ed751c8c0a4bb91fcb0ed2b57b171f8ae3d2d7ce592675c9a2e56703fed6b39e5f4e11c1ca2f2d795972404246f1e7b89b6c9df903c0fcd34b0e021beac1",
         "dest": "nuget-sources",

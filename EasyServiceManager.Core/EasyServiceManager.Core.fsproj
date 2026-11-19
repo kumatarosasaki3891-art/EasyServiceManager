@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <NoWarn>$(NoWarn);NU1900</NoWarn>
   </PropertyGroup>
 
@@ -12,13 +12,18 @@
     <Compile Include="Services\AppSettings.fs" />
     <Compile Include="Models\ServiceEntry.fs" />
     <Compile Include="Models\SecurityFinding.fs" />
+    <Compile Include="Services\QrCodeGenerator.fs" />
+    <Compile Include="Services\QrReportTransferService.fs" />
+    <Compile Include="Services\MasterDataRepository.fs" />
     <Compile Include="Services\ServiceDiscovery.fs" />
+    <Compile Include="Services\VersionDiagnostics.fs" />
     <Compile Include="Services\SecurityAudit.fs" />
     <Compile Include="Services\ReportExporter.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="11.0.0" />
   </ItemGroup>
 
 </Project>

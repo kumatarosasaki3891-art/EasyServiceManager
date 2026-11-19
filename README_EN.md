@@ -6,12 +6,12 @@
 
 English | [日本語](README.md)
 
-A local-first service discovery and quick security diagnostic application designed to let you see "what is running on this PC or server" at a single glance.  
-It visualizes key services categorized clearly and inspects basic local security configurations—including Firewalls, listening ports, and bind addresses—in a completely safe and non-intrusive way.
+A local-first, read-only service discovery and quick security diagnostic application designed to let you see "what is running on this PC or server" at a single glance.  
+It visualizes key services categorized clearly and inspects local security hygiene—including Firewalls, port exposure levels (L0/L1/L2), TLS certificate expiry, DNS resolution, DB authentication configs, and runtime EOL/critical advisories—in a safe, non-intrusive way.
 
-> A local-first, read-only service discovery and port exposure diagnostic tool for Windows and Linux (GUI & headless CLI `esd`)—100% offline with Markdown/HTML export and local Wi-Fi QR transfer.
+> A local-first, read-only service discovery and port exposure diagnostic tool for Windows and Linux (GUI & headless CLI `esd`), with Markdown/HTML export and local Wi-Fi QR transfer.
 
-> **Note:** This is a diagnostic inspection tool, not a management console to start/stop services, nor an intrusive vulnerability scanner targeting external machines.
+> **Note:** Diagnostics run locally on your device. Network access is used only when fetching version definitions from GitHub (`kuma-master-data`) or during explicit user-initiated transfer/update checks; no user data or diagnostic results are ever sent.
 
 ---
 
@@ -40,10 +40,11 @@ It visualizes key services categorized clearly and inspects basic local security
 - **Fast Search & Filtering**: Instant search by service name, display name, and category. Filter by 12 categories or your Favorites list.
 - **Service Details & One-Click URL Launch**: Inspect detailed service info; open web dashboards directly in your default browser for services listening on HTTP/HTTPS.
 - **Custom Service Registration**: Manually add custom services or microservices to track.
-- **Local Security Diagnostics (100-Point Score)**: Evaluates Firewall status, high-risk exposed ports, SSH settings, and HTTPS/HTTP exposure.
-- **Container Inspection (Linux)**: Checks local Docker and Podman container statuses, privileged mode flags, and exposed ports.
+- **Local Security Diagnostics (100-Point Score)**: Evaluates Firewall status, port exposure levels (L0 Local / L1 LAN / L2 All Interfaces) with Firewall context, SSH settings, HTTPS & loopback TLS certificate expiry, DNS resolution & servers, and Redis/MongoDB auth configuration.
+- **Runtime Version & Critical Advisory Checks**: Passively inspects installed versions of nginx, Apache httpd, PHP, MySQL, MariaDB, PostgreSQL, and Redis against EOL dates and curated critical advisories (fetches definitions from GitHub only).
+- **Container Inspection**: Checks local Docker and Podman container statuses, privileged mode flags, and exposed ports.
 - **Report Export & QR Code Transfer**: Export diagnostic reports as Markdown or HTML; securely transfer reports to your smartphone over the local Wi-Fi network with a one-time QR code.
-- **Headless CLI (`esd`)**: Single-file binary sharing the identical diagnostic engine for server environments and automated cron monitoring.
+- **Headless CLI (`esd`)**: Single-file binary sharing the identical diagnostic engine with `--lang` 12-language output, terminal QR display (`--qr`), and explicit `update-check` / `update-defs` commands.
 - **12 Languages Supported**: English, Japanese, Simplified Chinese, Traditional Chinese, Korean, Vietnamese, German, French, Spanish, Italian, Portuguese, and Russian.
 
 The language can be changed from the top of the diagnostic results panel and is saved to a configuration file:
@@ -110,10 +111,13 @@ Diagnostics are strictly read-only: the application reads current system configu
 | Item | Linux | Windows |
 | --- | --- | --- |
 | **Firewall** | UFW / firewalld status | Windows Firewall active profiles |
-| **High-Risk Ports** | TCP listening check via `ss` | Windows TCP listening sockets |
+| **Port Exposure (L0/L1/L2)** | DB / Admin / General port checks via `ss` with FW context | Windows TCP sockets with FW context |
+| **DB Auth Config** | Passive read of Redis / MongoDB config files | Authentication guidance for exposed Redis / MongoDB ports |
 | **SSH Configuration** | Effective config via `sshd -T` | Not applicable |
-| **HTTPS Ports** | Listening on TCP/80 & TCP/443 | Listening on TCP/80 & TCP/443 |
-| **Docker / Podman** | Running containers, privileged mode, port bindings | Not applicable |
+| **HTTPS & Cert Expiry** | Listening on TCP/80 & 443 + loopback TLS certificate expiry | Listening on TCP/80 & 443 + loopback TLS certificate expiry |
+| **DNS Checks** | `localhost`, host name, service URLs, `/etc/resolv.conf` | `localhost`, host name, service URLs, NIC DNS settings |
+| **Runtime Version & Advisories** | Passive package version check via `dpkg-query` / `rpm` | Passive `FileVersionInfo` check (incl. XAMPP PHP) |
+| **Docker / Podman** | Running containers, privileged mode, port bindings | Running container exposed ports |
 
 **High-risk ports monitored:** `3306` (MySQL), `5432` (PostgreSQL), `6379` (Redis), `9200` (Elasticsearch), `5601` (Kibana), `27017` (MongoDB), `5000` (Docker Registry / Dev servers).  
 A warning is triggered when these ports are bound to all network interfaces (`0.0.0.0` or `::`). Actual external reachability depends on network boundaries such as Firewalls, NAT, or router port forwarding.
@@ -171,17 +175,23 @@ esd scan --quiet --format text
 | --- | --- |
 | `--format text\|json\|markdown\|html` | Output format (default: `text`) |
 | `--output <path>` | Write output to a file (stdout if omitted) |
+| `--lang <code>` | Output language (`ja-JP`, `en-US`, `en`, `zh`, `ko`, etc. — 12 languages) |
 | `--only-running` | Include only active/running services in the report |
 | `--category <name>` | Filter by category (same names as in the GUI) |
 | `--save-snapshot [path]` | Save the scan result as a snapshot |
 | `--diff` | Display diff against previous snapshot when saving |
+| `--qr` | Start local Wi-Fi transfer server and show QR code in terminal |
+| `--qr-plain` | Disable ANSI background colors for terminal QR code |
+| `--ip <addr>` | Specify IP address to use for QR code transfer |
 | `--no-color` | Disable colored terminal output (auto-disabled when piping) |
 | `--quiet` | Output only the score and warning summary |
 
 ```bash
-esd version              # Print version info
+esd version              # Print version and Releases URL
 esd help                 # Show command help
 esd diff                 # Show only diff against the previous snapshot
+esd update-check         # Check for newer releases (network access on demand)
+esd update-defs          # Update version definitions cache (network access on demand)
 ```
 
 Snapshot file path: `~/.local/share/easy-service-diagnosis/snapshots/snapshot.json`

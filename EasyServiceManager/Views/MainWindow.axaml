@@ -138,17 +138,34 @@
                                            TextWrapping="Wrap" />
                                 <TextBlock Text="{Binding SecuritySummary}" Foreground="#71808E"
                                            FontSize="10" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding DefinitionDateText}" Foreground="#71808E"
+                                           FontSize="9" TextWrapping="Wrap" />
                             </StackPanel>
-                            <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding LanguageLabel}" Foreground="#687887" FontSize="10" />
-                                <ComboBox ItemsSource="{Binding LanguageOptions}" SelectedItem="{Binding Language}"
-                                          Width="116">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate x:DataType="vm:LanguageOption">
-                                            <TextBlock Text="{Binding Label}" />
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <StackPanel Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding LanguageLabel}" Foreground="#687887" FontSize="10" />
+                                    <ComboBox ItemsSource="{Binding LanguageOptions}" SelectedItem="{Binding Language}"
+                                              Width="112">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:LanguageOption">
+                                                <TextBlock Text="{Binding Label}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+                                <Button Command="{Binding OpenInfoDialogCommand}"
+                                        ToolTip.Tip="{Binding InfoDialogTitle}"
+                                        Width="34" Height="34" Padding="0" VerticalAlignment="Bottom"
+                                        Background="#E2E8F0" Foreground="#172331" CornerRadius="7"
+                                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                                    <Grid Width="26" Height="22">
+                                        <TextBlock Text="ℹ️" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        <Ellipse Width="7" Height="7" Fill="#2563EB"
+                                                 IsVisible="{Binding IsAppOutdated}"
+                                                 HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,1,1,0"
+                                                 ToolTip.Tip="{Binding AppUpdateAvailableText}" />
+                                    </Grid>
+                                </Button>
                             </StackPanel>
                         </Grid>
 
@@ -257,6 +274,15 @@
                                         <TextBlock Text="{Binding SelectedService.SharedProcessNote}"
                                                    Foreground="#8A6413" FontSize="10" TextWrapping="Wrap" />
                                     </Border>
+                                    <StackPanel IsVisible="{Binding SelectedService.HasExposureInfo}" Margin="0,0,0,10" Spacing="3">
+                                        <TextBlock Text="{Binding ExposureSectionLabel}" Foreground="#778695" FontSize="10" />
+                                        <Border Background="{Binding SelectedService.ExposureBadgeBg}" CornerRadius="5"
+                                                Padding="8,4" HorizontalAlignment="Left">
+                                            <TextBlock Text="{Binding SelectedService.ExposureLabel}"
+                                                       Foreground="{Binding SelectedService.ExposureBadgeFg}"
+                                                       FontSize="11" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        </Border>
+                                    </StackPanel>
                                     <TextBlock Text="{Binding ExecutableLabel}" Foreground="#778695" FontSize="10" />
                                     <TextBlock Text="{Binding SelectedService.ExecutableLabel}" FontSize="11"
                                                TextWrapping="Wrap" Margin="0,3,0,10" />
@@ -447,6 +473,114 @@
                     </Border>
 
                     <Button Command="{Binding CloseExportModalCommand}"
+                            Content="{Binding CloseModalButtonLabel}"
+                            HorizontalAlignment="Right" Background="#EEF1F4" Foreground="#314454"
+                            Padding="18,8" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- アプリ情報モーダル -->
+        <Grid Grid.Column="0" Grid.ColumnSpan="3" IsVisible="{Binding IsInfoDialogOpen}"
+              Background="#99000000" ZIndex="101">
+            <Border Background="White" BorderBrush="#D0DAE3" BorderThickness="1"
+                    CornerRadius="16" Padding="24,20" Width="480" MaxWidth="520"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    BoxShadow="0 12 32 0 #40000000">
+                <StackPanel Spacing="14">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" VerticalAlignment="Center">
+                        <Border Grid.Column="0" Width="36" Height="36" CornerRadius="8" ClipToBounds="True" VerticalAlignment="Center">
+                            <Image Source="/Assets/icon.jpg" Stretch="UniformToFill" />
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding AppTitle}" FontSize="17" FontWeight="Bold" />
+                            <TextBlock Text="{Binding InfoDialogTitle}" FontSize="11" Foreground="#687887" />
+                        </StackPanel>
+                        <Button Grid.Column="2" Command="{Binding CloseInfoDialogCommand}" Content="✕"
+                                Background="Transparent" Foreground="#5B6B7A" FontSize="16" Padding="8,4" />
+                    </Grid>
+
+                    <Border Height="1" Background="#E3E8ED" />
+
+                    <Border Background="#F5F7F9" BorderBrush="#DCE4EA" BorderThickness="1" CornerRadius="10" Padding="14">
+                        <StackPanel Spacing="8">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <StackPanel Grid.Column="0" Spacing="2">
+                                    <TextBlock Text="{Binding CurrentVersionHeader}" FontSize="11" Foreground="#687887" />
+                                    <TextBlock Text="{Binding CurrentAppVersionText}" FontSize="15" FontWeight="Bold" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="2">
+                                    <TextBlock Text="{Binding LatestVersionHeader}" FontSize="11" Foreground="#687887" />
+                                    <TextBlock Text="{Binding LatestAppVersionText}" FontSize="15" FontWeight="Bold" />
+                                </StackPanel>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding IsAppOutdated}">
+                                <TextBlock Grid.Column="0" Text="{Binding AppUpdateAvailableText}"
+                                           FontSize="12" Foreground="#2563EB" FontWeight="SemiBold"
+                                           VerticalAlignment="Center" TextWrapping="Wrap" />
+                                <Button Grid.Column="1" Command="{Binding OpenLatestVersionCommand}"
+                                        Content="{Binding ViewLatestVersionLabel}"
+                                        IsVisible="{Binding HasStoreUpdateLink}"
+                                        Background="#2563EB" Foreground="White"
+                                        FontSize="11" Padding="10,5" VerticalAlignment="Center" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Background="#F5F7F9" BorderBrush="#DCE4EA" BorderThickness="1" CornerRadius="10" Padding="14">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding DefinitionDateText}" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding MasterDataUpdateStatus}" IsVisible="{Binding HasMasterDataUpdateStatus}"
+                                           FontSize="11" Foreground="#5B6B7A" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Command="{Binding UpdateMasterDataCommand}"
+                                    Content="{Binding UpdateMasterDataButtonLabel}"
+                                    IsEnabled="{Binding CanUpdateMasterData}"
+                                    Background="#E5F2EE" Foreground="#1B6655" FontWeight="SemiBold"
+                                    FontSize="12" Padding="10,6" VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+
+                    <StackPanel Spacing="8">
+                        <Button Command="{Binding OpenReleasesCommand}" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left" Background="#EEF3F6" Padding="12,8">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <TextBlock Grid.Column="0" Text="📦" FontSize="15" VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding ReleasesButtonLabel}" FontSize="12" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding ReleasesUrlText}" FontSize="11" Foreground="#687887" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="↗" FontSize="13" Foreground="#687887" VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+                        <Button Command="{Binding OpenWebsiteCommand}" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left" Background="#EEF3F6" Padding="12,8">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <TextBlock Grid.Column="0" Text="🌐" FontSize="15" VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding WebsiteButtonLabel}" FontSize="12" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding WebsiteUrlText}" FontSize="11" Foreground="#687887" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="↗" FontSize="13" Foreground="#687887" VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+                        <Button Command="{Binding OpenInstagramCommand}" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left" Background="#EEF3F6" Padding="12,8">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <TextBlock Grid.Column="0" Text="📷" FontSize="15" VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding InstagramButtonLabel}" FontSize="12" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding InstagramUrlText}" FontSize="11" Foreground="#687887" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="↗" FontSize="13" Foreground="#687887" VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding PrivacyNoticeText}" FontSize="11" Foreground="#687887" TextWrapping="Wrap" />
+
+                    <Button Command="{Binding CloseInfoDialogCommand}"
                             Content="{Binding CloseModalButtonLabel}"
                             HorizontalAlignment="Right" Background="#EEF1F4" Foreground="#314454"
                             Padding="18,8" />

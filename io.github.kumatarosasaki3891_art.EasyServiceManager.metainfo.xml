@@ -21,7 +21,7 @@
     <ul>
       <li>Service Discovery: Detects running systemd services on Linux, categorizing them into Web Server, Container, Database, SSH, Monitoring, etc.</li>
       <li>Port &amp; Process Mapping: Correlates active listening TCP ports with corresponding service names and processes.</li>
-      <li>Basic Security Checks: Lightweight diagnostics for Firewall status, SSH configuration, open HTTPS ports, and Docker/Podman container settings.</li>
+      <li>Basic Security Checks: Lightweight diagnostics for Firewall status, port exposure levels (L0/L1/L2), TLS certificate expiry, DNS resolution, DB auth settings, runtime EOL/critical advisories, SSH configuration, and Docker/Podman container settings.</li>
       <li>QR Code Report Transfer: Built-in local HTTP server allows exporting diagnostic reports directly to a smartphone via QR code.</li>
       <li>Multi-language Support: Available in 12 languages (Japanese, English, Simplified Chinese, Traditional Chinese, Korean, Vietnamese, German, French, Spanish, Italian, Portuguese, Russian).</li>
       <li>Report Export: Export findings into clean Markdown, HTML, or JSON formats.</li>
@@ -36,7 +36,7 @@
     <ul xml:lang="ja">
       <li>サービス自動検出: Linux上のsystemdサービスを検出し、Webサーバー、データベース、コンテナ、SSH、監視などに自動分類。</li>
       <li>待受ポート可視化: 開放されているTCPポートと稼働中サービス・プロセスを紐づけて一覧表示。</li>
-      <li>簡易セキュリティ診断: Firewallの状態、待受ポート、SSH設定、HTTPSポート、Docker/Podman設定の安全性をチェック。</li>
+      <li>簡易セキュリティ診断: Firewallの状態、ポート露出レベル（L0/L1/L2）、TLS証明書有効期限、DNS設定、DB認証設定、ランタイム版本・緊急アドバイザリ、SSH設定、Docker/Podman設定をチェック。</li>
       <li>QRコードレポート転送: 内蔵の軽量HTTPサーバーにより、診断レポートをスマホのカメラでQRコードを読み取るだけで転送可能。</li>
       <li>12言語対応: 日本語、英語、中国語（簡体字・繁体字）、韓国語、ベトナム語、ドイツ語、フランス語、スペイン語、イタリア語、ポルトガル語、ロシア語に対応。</li>
       <li>レポート出力: 診断結果をMarkdown、HTML、JSONなどの形式で保存可能。</li>
@@ -73,6 +73,12 @@
   <content_rating type="oars-1.1" />
 
   <releases>
+    <release version="1.1.0" date="2026-11-20">
+      <description>
+        <p>Added TLS certificate expiry checks, DNS checks, structured port exposure levels (L0/L1/L2) with Firewall context, Redis/MongoDB auth config checks, passive runtime EOL and critical advisory checks, an About &amp; Definitions dialog, and CLI --lang / --qr / update-check enhancements.</p>
+        <p xml:lang="ja">TLS証明書の有効期限チェック、DNSチェック、ポート露出レベル（L0/L1/L2）とFirewall連携判定、Redis/MongoDB認証設定チェック、ランタイム版本・緊急アドバイザリチェック、アプリ情報ダイアログ、CLIの --lang / --qr / update-check を追加しました。</p>
+      </description>
+    </release>
     <release version="1.0.0" date="2026-11-14">
       <description>
         <p>Initial Flathub release for Linux desktop.</p>

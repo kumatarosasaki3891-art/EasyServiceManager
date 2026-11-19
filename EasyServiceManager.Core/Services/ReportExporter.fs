@@ -235,7 +235,7 @@ module ReportExporter =
   .finding { display: flex; gap: 10px; background: #FAFBFC; border: 1px solid #E3E8ED; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
   .finding-icon { font-size: 16px; }
   .finding-title { font-size: 13px; font-weight: bold; }
-  .finding-detail { font-size: 12px; color: #5C6B7A; }
+  .finding-detail { font-size: 12px; color: #5C6B7A; white-space: pre-line; }
   .filter-bar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
   .search { width: 100%%; padding: 10px 12px; border: 1px solid #CFD8E0; border-radius: 8px; font-size: 14px; }
   .filter-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }

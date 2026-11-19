@@ -1,7 +1,41 @@
 namespace EasyServiceManager.Models
 
+open System
 open CommunityToolkit.Mvvm.ComponentModel
 open EasyServiceManager.Services
+
+/// <summary>待ち受けアドレスに基づく露出レベル。</summary>
+type ExposureLevel =
+    | Local
+    | Lan
+    | Public
+
+/// <summary>露出レベル判定用ヘルパー。</summary>
+module Exposure =
+    /// <summary>バインドアドレスから露出レベル（L0/L1/L2）を判定します。</summary>
+    let classify (bindAddress: string) : ExposureLevel =
+        if String.IsNullOrWhiteSpace bindAddress then
+            Local
+        else
+            let trimmed = bindAddress.Trim()
+            if trimmed = "0.0.0.0" || trimmed = "::" || trimmed = "*" || trimmed = "[::]" || trimmed = "[::0]" then
+                Public
+            elif trimmed = "127.0.0.1" || trimmed = "::1" || trimmed = "[::1]" || trimmed.StartsWith("127.", StringComparison.Ordinal) then
+                Local
+            else
+                Lan
+
+    /// <summary>露出レベルに対応する短いコード（L0/L1/L2）を返します。</summary>
+    let toCode = function
+        | Local -> "L0"
+        | Lan -> "L1"
+        | Public -> "L2"
+
+    /// <summary>露出レベルの比較用の重みを返します。</summary>
+    let rank = function
+        | Local -> 0
+        | Lan -> 1
+        | Public -> 2
 
 /// <summary>検出されたサービスおよびカスタムサービスの表示モデル。</summary>
 [<AllowNullLiteral>]
@@ -12,6 +46,8 @@ type ServiceEntry(name: string, displayName: string, category: string, status: s
     let mutable languageCode = "ja-JP"
     let mutable isDiff = false
     let mutable diffNote = ""
+    let mutable bindAddress = ""
+    let mutable exposureCode = ""
 
     /// <summary>サービス識別名。</summary>
     member _.Name = name
@@ -94,6 +130,55 @@ type ServiceEntry(name: string, displayName: string, category: string, status: s
     /// <summary>一覧行左端のアクセントバー色。</summary>
     member _.AccentBarColor = if isDiff then "#EAB308" else "#38A778"
 
+    /// <summary>待ち受けバインドアドレス。</summary>
+    member this.BindAddress
+        with get () = bindAddress
+        and set value =
+            if this.SetProperty(&bindAddress, value) then
+                this.OnPropertyChanged("ExposureLabel")
+
+    /// <summary>露出レベルコード（L0 / L1 / L2 / 空）。</summary>
+    member this.ExposureCode
+        with get () = exposureCode
+        and set value =
+            if this.SetProperty(&exposureCode, value) then
+                this.OnPropertyChanged("HasExposureInfo")
+                this.OnPropertyChanged("ExposureLabel")
+                this.OnPropertyChanged("ExposureBadgeBg")
+                this.OnPropertyChanged("ExposureBadgeFg")
+
+    /// <summary>露出レベル情報が表示可能かどうか。</summary>
+    member _.HasExposureInfo = not (String.IsNullOrWhiteSpace exposureCode)
+
+    /// <summary>翻訳済み・バインドアドレス併記の露出レベル表記。</summary>
+    member _.ExposureLabel =
+        if String.IsNullOrWhiteSpace exposureCode then ""
+        else
+            let levelText =
+                match exposureCode with
+                | "L0" -> Localization.translate languageCode "ローカル限定"
+                | "L1" -> Localization.translate languageCode "LAN露出"
+                | "L2" -> Localization.translate languageCode "全公開"
+                | _ -> exposureCode
+            if String.IsNullOrWhiteSpace bindAddress then sprintf "%s: %s" exposureCode levelText
+            else sprintf "%s (%s: %s)" bindAddress exposureCode levelText
+
+    /// <summary>露出レベルバッジ背景色。</summary>
+    member _.ExposureBadgeBg =
+        match exposureCode with
+        | "L2" -> "#FEE2E2"
+        | "L1" -> "#FEF3C7"
+        | "L0" -> "#DCFCE7"
+        | _ -> "#F1F5F9"
+
+    /// <summary>露出レベルバッジ文字色。</summary>
+    member _.ExposureBadgeFg =
+        match exposureCode with
+        | "L2" -> "#991B1B"
+        | "L1" -> "#92400E"
+        | "L0" -> "#166534"
+        | _ -> "#475569"
+
     /// <summary>表示言語コード。変更時に関連プロパティの変更通知を発行します。</summary>
     member this.LanguageCode
         with get () = languageCode
@@ -107,6 +192,7 @@ type ServiceEntry(name: string, displayName: string, category: string, status: s
                 this.OnPropertyChanged("ExecutableLabel")
                 this.OnPropertyChanged("UrlLabel")
                 this.OnPropertyChanged("DiffNoteLabel")
+                this.OnPropertyChanged("ExposureLabel")
 
     /// <summary>お気に入り登録状態。</summary>
     member this.IsFavorite
