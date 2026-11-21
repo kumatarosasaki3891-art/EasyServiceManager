@@ -54,7 +54,7 @@ modules:
       # Flathub 審査・本番ビルド用（タグおよびコミットSHA固定）
       - type: git
         url: https://github.com/kumatarosasaki3891-art/EasyServiceManager.git
-        tag: linux-v1.0.0
-        commit: cc839eae644b8d7b36cdf739f7ded491435bf605
+        tag: linux-v1.1.0
+        commit: 00424bff76165b7712a8f83eeef74ed57d29288b
       # オフラインビルド用 NuGet パッケージ定義
       - nuget-sources.json
